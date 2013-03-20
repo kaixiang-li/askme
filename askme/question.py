@@ -1,4 +1,5 @@
 import re
+from datetime import date
 class QuestionError(Exception): pass
 
 class Question(object):
@@ -10,14 +11,17 @@ class Question(object):
 
         # some configs
         self.default = None
+        self.character = None
         self.uppercase = None
         self.lowercase = None
         self.gather = False
-        self.echo = False
+        self.echo = True
         self.first_answer = None
         self.confirm = False
         self.validate = None
-        self.reponses = {}
+        self.responses = {}
+
+        self.build_responses()
 
     def answer_or_default(self, answer_string):
         if answer_string:
@@ -27,12 +31,16 @@ class Question(object):
 
     # convert the type
     def convert(self, answer_string):
+        answer_type = self.answer_type
         if answer_type == None:
             return answer_string
         elif answer_type == str:
             return str(answer_string)
         elif answer_type == int:
             return int(answer_string)
+        elif answer_type == date:
+            date_arr = map(lambda x:int(x),answer_string.split(","))
+            return date(date_arr[0], date_arr[1], date_arr[2])
 
     def valid_answer(self, answer_string):
         if self.validate:
@@ -42,7 +50,7 @@ class Question(object):
             return True
 
     def build_responses(self):
-        return {}
+        self.responses["not_valid"] = "Your answer must be valid\n"
 
     def update(self):
         if self.default:

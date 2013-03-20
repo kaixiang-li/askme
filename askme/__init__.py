@@ -1,13 +1,12 @@
-__version__ = (1, 3, 0)
+__version__ = (0, 0, 1)
 
 import sys
-from option import Option
-from command import Command, CommandError
-from application import Application, ApplicationError
 from question import Question, QuestionError
 import readline
 from mako.template import Template
 from system_extension import getch
+from getpass import getpass
+from termcolor import colored, cprint
 
 class Askme(object):
     def __init__(self, input=sys.stdin, output=sys.stdout):
@@ -24,59 +23,66 @@ class Askme(object):
             return self.gather()
 
         self.say(self.question.question)
-        try:
-            self.answer = self.question.answer_or_default(self.get_response())
-            self.answer = self.question.change_case(self.answer)
-            self.__class__(self.input, self.output)
-            self.question.update()
-            if not self.question.valid_answer(self.answer):
-                self.explain_error("not valid")
-                raise QuestionError()
-            self.answer = self.question.covert(self.answer)
-        except:
-            pass
-        else:
-            self.question = None
+        # retry until the correct answer
+        while True:
+            try:
+                self.answer = self.question.answer_or_default(self.get_response())
+                self.answer = self.question.change_case(self.answer)
+                self.__class__(self.input, self.output)
+                self.question.update()
+                if not self.question.valid_answer(self.answer):
+                    self.explain_error("not_valid")
+                    raise QuestionError()
+                self.answer = self.question.convert(self.answer)
+            except QuestionError:
+                pass
+            else:
+                self.question = None
+                break
         return self.answer
 
+    def get_line(self):
+        raw_answer = self.input.readline().strip('\n')
+        return raw_answer
+
+
     def say(self, statement):
-        statement = str(statement)
+        statement = "<%! from termcolor import colored, cprint %>" + str(statement)
+        # if statement ends with a whitespace before a color escape
+        template = Template(statement)
         if statement:
-           template = Template(statement)
-           self.output.write(template.render())
+            sys.stdout.write("%s" % template.render())
         else:
-            return
+            sys.stdout.write("%s" % template.render())
 
 
     def get_response(self):
         if self.question.first_answer:
             return self.question.first_answer
+        if self.question.echo == True:
+            return self.get_line()
         else:
             line = ""
-            character = getch()
             while True:
-                character_code = ord(character)
-                if not self.question.echo:
-                    self.say(character)
-                else:
-                    self.say(self.question.echo)
-                # carriage or newline
-                if character_code == 13 or character_code == 10:
+                if self.question.echo == False:
+                    line = getpass("")
                     break
-                # backspace or delete
-                if character_code == 127 or character_code == 8:
-                    break;
                 else:
-                    if not self.question.echo:
-                        line += character
+                    self.output.write(self.question.echo)
+
+                    character = getch()
+                    character_code = ord(character)
+                    # backspace or delete
+                    if character_code == 127 or character_code == 8:
+                        #line = line[:-1]
+                        pass
                     else:
-                        line += self.question.echo
-                character = getch()
-            print line
-            return line
+                        line += character
+                    # carriage or newline
+                    if character_code == 13 or character_code == 10:
+                        break
+            return self.question.change_case(line)
 
-
-    def explain_error(self, error_report):
-        print error_report
-        return error_report
+    def explain_error(self, error):
+        self.say(self.question.responses[error]) if error else None
 

@@ -2,4 +2,8 @@
 *.pyc
 *.swp
 *.swo
-/highline
+*.swm
+*.swn
+/build
+/dist
+/askme.egg-info

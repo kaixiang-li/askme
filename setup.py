@@ -1,9 +1,7 @@
 import sys
 from setuptools import setup, find_packages
 
-install_requires = ['versiontools']
-if sys.version_info[0] == 2 and sys.version_info[1] < 7:
-  install_requires.append('argparse')
+install_requires = ['versiontools', 'mako', 'termcolor']
 
 setup(
     name = 'askme',
