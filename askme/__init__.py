@@ -86,3 +86,5 @@ class Askme(object):
     def explain_error(self, error):
         self.say(self.question.responses[error]) if error else None
 
+agent = Askme()
+ask = agent.ask

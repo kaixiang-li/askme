@@ -1,5 +1,5 @@
 from datetime import date
-from askme import *
+from askme import Askme
 
 terminal = Askme()
 
